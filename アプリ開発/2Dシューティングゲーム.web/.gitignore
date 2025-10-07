@@ -1,0 +1,21 @@
+# Godot files
+.godot/
+*.import
+.mono/
+data_*/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
+
+# Logs
+*.log

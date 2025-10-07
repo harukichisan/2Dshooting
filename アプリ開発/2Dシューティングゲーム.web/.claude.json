@@ -1,0 +1,33 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/harukichi/Godot/2Dシューティングゲーム"
+      ]
+    },
+    "godot-project": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/harukichi/Godot/2Dシューティングゲーム/scenes",
+        "/Users/harukichi/Godot/2Dシューティングゲーム/scripts",
+        "/Users/harukichi/Godot/2Dシューティングゲーム/assets"
+      ]
+    },
+    "codex": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@executeautomation/mcp-codex"
+      ]
+    }
+  },
+  "allowedCommands": [
+    "godot",
+    "godot --path ."
+  ]
+}

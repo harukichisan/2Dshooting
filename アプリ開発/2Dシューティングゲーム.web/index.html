@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>レトロシューティングゲーム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="startScreen" class="menu-shell active" role="application">
+        <div class="starfield-wrapper" aria-hidden="true">
+            <canvas id="starfieldLayerFar" class="starfield-layer layer-far"></canvas>
+            <canvas id="starfieldLayerMid" class="starfield-layer layer-mid"></canvas>
+            <canvas id="starfieldLayerNear" class="starfield-layer layer-near"></canvas>
+            <canvas id="starfieldLayerFx" class="starfield-layer layer-fx"></canvas>
+        </div>
+        <div class="nebula-overlay" aria-hidden="true"></div>
+
+        <div class="start-content">
+            <div class="title-container">
+                <h1 class="game-title">SPACE SHOOTER 2D</h1>
+                <p class="game-tagline">Defend the frontier · Claim the stars</p>
+                <div class="title-glow"></div>
+            </div>
+
+            <nav class="main-menu" aria-label="メインメニュー">
+                <button class="menu-btn primary" data-action="start">
+                    <span class="btn-icon">▶</span>
+                    <span class="btn-text">START GAME</span>
+                    <span class="btn-sub">難易度と機体を選択</span>
+                </button>
+                <button class="menu-btn" data-panel="statisticsScreen">
+                    <span class="btn-icon">📊</span>
+                    <span class="btn-text">STATISTICS</span>
+                    <span class="btn-sub">累計データと到達記録</span>
+                </button>
+                <button class="menu-btn" data-panel="achievementsScreen">
+                    <span class="btn-icon">🏆</span>
+                    <span class="btn-text">ACHIEVEMENTS</span>
+                    <span class="btn-sub">トロフィーとバッジ</span>
+                </button>
+                <button class="menu-btn" data-panel="highScoresScreen">
+                    <span class="btn-icon">👑</span>
+                    <span class="btn-text">HIGH SCORES</span>
+                    <span class="btn-sub">難易度別ハイスコア</span>
+                </button>
+                <button class="menu-btn" data-panel="settingsScreen">
+                    <span class="btn-icon">⚙</span>
+                    <span class="btn-text">SETTINGS</span>
+                    <span class="btn-sub">サウンド・操作・表示</span>
+                </button>
+                <button class="menu-btn" data-panel="howToPlayScreen">
+                    <span class="btn-icon">❓</span>
+                    <span class="btn-text">HOW TO PLAY</span>
+                    <span class="btn-sub">基本操作とヒント</span>
+                </button>
+                <button class="menu-btn" data-panel="creditsScreen">
+                    <span class="btn-icon">👥</span>
+                    <span class="btn-text">CREDITS</span>
+                    <span class="btn-sub">開発・サウンド</span>
+                </button>
+                <button class="menu-btn" data-panel="exitScreen">
+                    <span class="btn-icon">⏻</span>
+                    <span class="btn-text">EXIT</span>
+                    <span class="btn-sub">ゲームを終了</span>
+                </button>
+            </nav>
+
+            <div class="stats-preview" aria-live="polite">
+                <div class="stat-mini">
+                    <span class="stat-label">総撃破数</span>
+                    <span class="stat-value" id="previewTotalKills">0</span>
+                </div>
+                <div class="stat-mini">
+                    <span class="stat-label">総プレイ時間</span>
+                    <span class="stat-value" id="previewPlayTime">0:00:00</span>
+                </div>
+                <div class="stat-mini">
+                    <span class="stat-label">実績</span>
+                    <span class="stat-value" id="previewAchievements">0/0</span>
+                </div>
+            </div>
+
+            <div class="profile-footer">
+                <div class="profile-item">Last Difficulty: <span id="profileLastDifficulty">NORMAL</span></div>
+                <div class="profile-item">Ready Ship: <span id="profileLastCharacter">FIGHTER</span></div>
+            </div>
+        </div>
+
+        <div class="menu-hint" id="menuHint">↑ ↓ で選択 · Enterで決定 · Escで戻る</div>
+
+        <section id="difficultySelectScreen" class="menu-panel" aria-hidden="true">
+            <header class="panel-header">
+                <button class="panel-back" data-back="main">← BACK</button>
+                <h2 class="section-title">SELECT DIFFICULTY</h2>
+            </header>
+            <div class="panel-body">
+                <div class="difficulty-cards">
+                    <article class="difficulty-card easy" data-difficulty="easy">
+                        <div class="card-header">
+                            <div class="card-icon">🟢</div>
+                            <h3>EASY</h3>
+                            <span class="card-tag">Safe Start</span>
+                        </div>
+                        <p class="card-summary">初心者向けのやさしい設定。敵は弱く、アイテムが豊富。</p>
+                        <ul class="card-list">
+                            <li>敵HP <strong>-40%</strong></li>
+                            <li>弾速 <strong>-25%</strong></li>
+                            <li>プレイヤーHP <strong>+50%</strong></li>
+                            <li>アイテムドロップ率 <strong>+100%</strong></li>
+                            <li>スコア倍率 <strong>×0.5</strong></li>
+                        </ul>
+                        <div class="risk-reward">
+                            <span class="risk">低リスク</span>
+                            <span class="reward">低リワード</span>
+                        </div>
+                        <button class="card-select" data-action="confirmDifficulty" data-difficulty="easy">Select</button>
+                    </article>
+                    <article class="difficulty-card normal" data-difficulty="normal">
+                        <div class="card-header">
+                            <div class="card-icon">🔵</div>
+                            <h3>NORMAL</h3>
+                            <span class="card-tag">Balanced</span>
+                        </div>
+                        <p class="card-summary">標準バランス。オリジナルのゲーム体験そのまま。</p>
+                        <ul class="card-list">
+                            <li>標準設定</li>
+                            <li>推奨難易度</li>
+                            <li>スコア倍率 <strong>×1.0</strong></li>
+                        </ul>
+                        <div class="risk-reward">
+                            <span class="risk">中リスク</span>
+                            <span class="reward">標準リワード</span>
+                        </div>
+                        <button class="card-select" data-action="confirmDifficulty" data-difficulty="normal">Select</button>
+                    </article>
+                    <article class="difficulty-card hard" data-difficulty="hard">
+                        <div class="card-header">
+                            <div class="card-icon">🔴</div>
+                            <h3>HARD</h3>
+                            <span class="card-tag">High Stakes</span>
+                        </div>
+                        <p class="card-summary">上級者向け。敵も弾も苛烈だがスコア倍率が高い。</p>
+                        <ul class="card-list">
+                            <li>敵HP <strong>+80%</strong></li>
+                            <li>弾速 <strong>+40%</strong></li>
+                            <li>敵の数 <strong>+30%</strong></li>
+                            <li>アイテムドロップ率 <strong>-30%</strong></li>
+                            <li>スコア倍率 <strong>×2.0</strong></li>
+                        </ul>
+                        <div class="risk-reward">
+                            <span class="risk">高リスク</span>
+                            <span class="reward">高リワード</span>
+                        </div>
+                        <button class="card-select" data-action="confirmDifficulty" data-difficulty="hard">Select</button>
+                    </article>
+                </div>
+                <footer class="panel-footer">
+                    <div class="panel-info" id="difficultyInfo">難易度を選択してください。</div>
+                    <button class="primary-btn" data-action="goToCharacter" disabled>CONTINUE</button>
+                </footer>
+            </div>
+        </section>
+
+        <section id="characterSelectScreen" class="menu-panel" aria-hidden="true">
+            <header class="panel-header">
+                <button class="panel-back" data-back="difficultySelectScreen">← BACK</button>
+                <h2 class="section-title">SELECT SHIP</h2>
+            </header>
+            <div class="panel-body">
+                <div class="character-grid" id="characterGrid"></div>
+                <aside class="character-detail" id="characterDetail">
+                    <h3 id="characterName">FIGHTER</h3>
+                    <p id="characterDescription">バランスの取れた万能型。どの難易度でも扱いやすいスタンダード機。</p>
+                    <dl class="character-stats">
+                        <div>
+                            <dt>攻撃力</dt>
+                            <dd><div class="bar"><div id="statAttack" class="fill" style="width: 70%"></div></div></dd>
+                        </div>
+                        <div>
+                            <dt>防御力</dt>
+                            <dd><div class="bar"><div id="statDefense" class="fill" style="width: 60%"></div></div></dd>
+                        </div>
+                        <div>
+                            <dt>スピード</dt>
+                            <dd><div class="bar"><div id="statSpeed" class="fill" style="width: 80%"></div></div></dd>
+                        </div>
+                    </dl>
+                    <div class="character-meta">
+                        <span>解放状態: <span id="characterUnlockState">UNLOCKED</span></span>
+                        <span>選択難易度: <span id="characterSelectedDifficulty">NORMAL</span></span>
+                    </div>
+                    <button class="primary-btn" data-action="launchGame" disabled>LAUNCH MISSION</button>
+                </aside>
+            </div>
+        </section>
+
+        <section id="statisticsScreen" class="menu-panel" aria-hidden="true">
+            <header class="panel-header">
+                <button class="panel-back" data-back="main">← BACK</button>
+                <h2 class="section-title">STATISTICS</h2>
+            </header>
+            <div class="panel-body">
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-icon">💀</div>
+                        <div class="stat-info">
+                            <div class="stat-label">総撃破数</div>
+                            <div class="stat-value-large" id="statTotalKills">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">⏱</div>
+                        <div class="stat-info">
+                            <div class="stat-label">総プレイ時間</div>
+                            <div class="stat-value-large" id="statPlayTime">0:00:00</div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">🎮</div>
+                        <div class="stat-info">
+                            <div class="stat-label">総プレイ回数</div>
+                            <div class="stat-value-large" id="statGamesPlayed">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <div class="stat-label">クリア回数</div>
+                            <div class="stat-value-large" id="statClears">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="difficulty-stats">
+                    <h3>難易度別記録</h3>
+                    <div class="diff-stats-grid">
+                        <div class="diff-stat-card easy">
+                            <h4>🟢 EASY</h4>
+                            <div class="diff-record">
+                                <span>ハイスコア</span>
+                                <span id="statScoreEasy">0</span>
+                            </div>
+                            <div class="diff-record">
+                                <span>最高Wave</span>
+                                <span id="statWaveEasy">0</span>
+                            </div>
+                        </div>
+                        <div class="diff-stat-card normal">
+                            <h4>🔵 NORMAL</h4>
+                            <div class="diff-record">
+                                <span>ハイスコア</span>
+                                <span id="statScoreNormal">0</span>
+                            </div>
+                            <div class="diff-record">
+                                <span>最高Wave</span>
+                                <span id="statWaveNormal">0</span>
+                            </div>
+                        </div>
+                        <div class="diff-stat-card hard">
+                            <h4>🔴 HARD</h4>
+                            <div class="diff-record">
+                                <span>ハイスコア</span>
+                                <span id="statScoreHard">0</span>
+                            </div>
+                            <div class="diff-record">
+                                <span>最高Wave</span>
+                                <span id="statWaveHard">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="achievementsScreen" class="menu-panel" aria-hidden="true">
+            <header class="panel-header">
+                <button class="panel-back" data-back="main">← BACK</button>
+                <h2 class="section-title">ACHIEVEMENTS</h2>
+            </header>
+            <div class="panel-body achievements-panel">
+                <div class="achievements-progress">
+                    <div class="progress-ring">
+                        <svg viewBox="0 0 120 120">
+                            <circle class="progress-bg" cx="60" cy="60" r="54"></circle>
+                            <circle class="progress-fill" cx="60" cy="60" r="54" stroke-dasharray="339.292" stroke-dashoffset="339.292"></circle>
+                        </svg>
+                        <div class="progress-text" id="achievementProgressText">0%</div>
+                    </div>
+                    <div class="progress-meta">
+                        <div>達成済み: <span id="achievementProgressCount">0/0</span></div>
+                        <div>レジェンダリー: <span id="legendaryCount">0</span></div>
+                    </div>
+                </div>
+                <div class="achievement-categories">
+                    <section class="achievement-category">
+                        <h3>撃破数マイルストーン</h3>
+                        <div class="achievement-grid" id="achievementGridKills"></div>
+                    </section>
+                    <section class="achievement-category">
+                        <h3>Wave到達</h3>
+                        <div class="achievement-grid" id="achievementGridWaves"></div>
+                    </section>
+                    <section class="achievement-category">
+                        <h3>スコア達成</h3>
+                        <div class="achievement-grid" id="achievementGridScores"></div>
+                    </section>
+                    <section class="achievement-category">
+                        <h3>特殊条件</h3>
+                        <div class="achievement-grid" id="achievementGridSpecial"></div>
+                    </section>
+                </div>
+            </div>
+        </section>
+
+        <section id="highScoresScreen" class="menu-panel" aria-hidden="true">
+            <header class="panel-header">
+                <button class="panel-back" data-back="main">← BACK</button>
+                <h2 class="section-title">HIGH SCORES</h2>
+            </header>
+            <div class="panel-body">
+                <div class="highscore-columns">
+                    <div class="highscore-card easy">
+                        <h3>🟢 EASY</h3>
+                        <div class="highscore-value" id="highScoreEasy">0</div>
+                        <div class="wave-value">最高Wave: <span id="highWaveEasy">0</span></div>
+                    </div>
+                    <div class="highscore-card normal">
+                        <h3>🔵 NORMAL</h3>
+                        <div class="highscore-value" id="highScoreNormal">0</div>
+                        <div class="wave-value">最高Wave: <span id="highWaveNormal">0</span></div>
+                    </div>
+                    <div class="highscore-card hard">
+                        <h3>🔴 HARD</h3>
+                        <div class="highscore-value" id="highScoreHard">0</div>
+                        <div class="wave-value">最高Wave: <span id="highWaveHard">0</span></div>
+                    </div>
+                </div>
+                <div class="best-run" id="bestRunSummary">ベストラン記録がここに表示されます。</div>
+            </div>
+        </section>
+
+        <section id="settingsScreen" class="menu-panel" aria-hidden="true">
+            <header class="panel-header">
+                <button class="panel-back" data-back="main">← BACK</button>
+                <h2 class="section-title">SETTINGS</h2>
+            </header>
+            <div class="panel-body settings-body">
+                <div class="setting-group">
+                    <h3>Audio</h3>
+                    <label class="slider-label">BGM Volume
+                        <input type="range" min="0" max="1" step="0.05" value="0.7" id="bgmVolume">
+                    </label>
+                    <label class="slider-label">SFX Volume
+                        <input type="range" min="0" max="1" step="0.05" value="0.8" id="sfxVolume">
+                    </label>
+                    <div class="setting-toggle">
+                        <input type="checkbox" id="ambientToggle" checked>
+                        <label for="ambientToggle">Ambient Space Sound</label>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h3>Display</h3>
+                    <div class="setting-toggle">
+                        <input type="checkbox" id="fullscreenToggle">
+                        <label for="fullscreenToggle">Fullscreen Mode</label>
+                    </div>
+                    <div class="setting-toggle">
+                        <input type="checkbox" id="highParticlesToggle" checked>
+                        <label for="highParticlesToggle">High Particle Density</label>
+                    </div>
+                    <div class="setting-toggle">
+                        <input type="checkbox" id="reducedMotionToggle">
+                        <label for="reducedMotionToggle">Reduce Motion (Accessibility)</label>
+                    </div>
+                </div>
+                <div class="setting-group">
+                    <h3>Controls</h3>
+                    <div class="setting-toggle">
+                        <input type="checkbox" id="gamepadToggle">
+                        <label for="gamepadToggle">Enable Gamepad Navigation</label>
+                    </div>
+                    <p class="setting-note">デフォルト: キーボード ← → で移動, SPACEで射撃, Escで戻る</p>
+                </div>
+                <footer class="panel-footer">
+                    <button class="secondary-btn" data-action="resetSettings">RESET DEFAULTS</button>
+                    <button class="primary-btn" data-action="saveSettings">SAVE</button>
+                </footer>
+            </div>
+        </section>
+
+        <section id="howToPlayScreen" class="menu-panel" aria-hidden="true">
+            <header class="panel-header">
+                <button class="panel-back" data-back="main">← BACK</button>
+                <h2 class="section-title">HOW TO PLAY</h2>
+            </header>
+            <div class="panel-body howto-body">
+                <div class="howto-columns">
+                    <div>
+                        <h3>操作</h3>
+                        <ul>
+                            <li>← → : 機体移動</li>
+                            <li>SPACE : ショット</li>
+                            <li>A : 実績ウィンドウ</li>
+                            <li>R : リスタート</li>
+                            <li>Esc : メニューに戻る</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3>目的</h3>
+                        <p>Waveを進め、敵を殲滅し、スコアを稼いで実績と報酬を獲得しましょう。</p>
+                        <p>ボスWaveでは特別なパターンと攻撃が待ち構えています。報酬を活用し、最終Waveを目指してください。</p>
+                    </div>
+                    <div>
+                        <h3>ヒント</h3>
+                        <ul>
+                            <li>コンボを維持するとスコア倍率が上昇。</li>
+                            <li>パワーアップを活用して状況を有利に。</li>
+                            <li>難易度によって敵挙動と報酬が大きく変化。</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="creditsScreen" class="menu-panel" aria-hidden="true">
+            <header class="panel-header">
+                <button class="panel-back" data-back="main">← BACK</button>
+                <h2 class="section-title">CREDITS</h2>
+            </header>
+            <div class="panel-body credits-body">
+                <div class="credit-column">
+                    <h3>Game Design</h3>
+                    <p>harukichi</p>
+                </div>
+                <div class="credit-column">
+                    <h3>Programming</h3>
+                    <p>Codex (GPT-5)</p>
+                </div>
+                <div class="credit-column">
+                    <h3>Art &amp; UI</h3>
+                    <p>Space Shooter UI Kit</p>
+                </div>
+                <div class="credit-column">
+                    <h3>Audio</h3>
+                    <p>FreeSound Space Pack</p>
+                </div>
+                <div class="credit-column">
+                    <h3>Special Thanks</h3>
+                    <p>Godot Community</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="exitScreen" class="menu-panel" aria-hidden="true">
+            <header class="panel-header">
+                <button class="panel-back" data-back="main">← BACK</button>
+                <h2 class="section-title">EXIT GAME</h2>
+            </header>
+            <div class="panel-body exit-body">
+                <p>ブラウザ版のためウィンドウは自動では閉じられません。ゲームを終了しますか？</p>
+                <div class="exit-actions">
+                    <button class="secondary-btn" data-back="main">RETURN TO MENU</button>
+                    <button class="primary-btn" data-action="confirmExit">EXIT</button>
+                </div>
+                <p class="exit-note">※ EXITを選択するとスタート画面に戻り、進行中のゲームはリセットされます。</p>
+            </div>
+        </section>
+
+        <div id="toastContainer" aria-live="polite"></div>
+    </div>
+
+    <div id="gameLayer" class="game-layer hidden">
+        <div id="ui" class="hud-bar">
+            <div>SCORE: <span id="score">0</span></div>
+            <div>HIGH: <span id="highScore">0</span></div>
+            <div>HP: <span id="hp">100</span></div>
+            <div id="comboDisplay" class="combo-display" style="display: none;">COMBO: <span id="combo">0</span> × <span id="multiplier">1</span></div>
+        </div>
+        <div id="gameOver">
+            <div class="game-over-title">GAME OVER</div>
+            <div class="game-over-subtitle">Press R to Restart</div>
+            <div class="game-over-subtitle secondary">Press ESC to Return to Menu</div>
+        </div>
+        <div id="instructions">← → : 移動 | SPACE : 射撃 | R : リスタート | A : 実績</div>
+        <div id="difficultyDisplay">難易度: <span id="currentDifficulty">ノーマル</span></div>
+        <div id="difficultySelector">
+            <h3>難易度選択</h3>
+            <div class="difficulty-buttons">
+                <button onclick="changeDifficulty('easy')" id="diffEasy" title="敵HP -40%, 弾速 -25%, プレイヤーHP +50%, アイテム +100%, スコア x0.5">
+                    🟢 Easy (イージー)
+                </button>
+                <button onclick="changeDifficulty('normal')" id="diffNormal" class="active" title="現在のバランス, スコア x1.0">
+                    🔵 Normal (ノーマル)
+                </button>
+                <button onclick="changeDifficulty('hard')" id="diffHard" title="敵HP +80%, 弾速 +40%, 敵の数 +30%, アイテム -30%, スコア x2.0">
+                    🔴 Hard (ハード)
+                </button>
+            </div>
+        </div>
+        <div class="game-buttons-container">
+            <button id="achievementButton" onclick="openAchievementModal()" title="実績">
+                <span class="btn-icon">🏆</span>
+                <span class="btn-text">実績</span>
+                <span class="btn-badge" id="achievementBadge">0/50</span>
+            </button>
+            <button id="upgradeButton" onclick="coinSystem.showUpgradeModal()" title="ショップ">
+                <span class="btn-icon">💰</span>
+                <span class="btn-text">ショップ</span>
+            </button>
+            <button id="simpleAchievementsButton" onclick="openSimpleAchievementsModal()" title="記録">
+                <span class="btn-icon">📊</span>
+                <span class="btn-text">記録</span>
+            </button>
+        </div>
+        <div id="headerCoins">💰 <span id="headerCoinsValue">0</span></div>
+        <div id="achievementNotification">
+            <div class="title"></div>
+            <div class="description"></div>
+        </div>
+        <div id="achievementModal" onclick="closeAchievementModal(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <div class="modal-header">
+                    <h2>🏆 実績システム</h2>
+                    <button class="close-btn" onclick="closeAchievementModal()">閉じる</button>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                    <div class="progress-text" id="progressText">0/50 (0%)</div>
+                </div>
+                <div class="achievement-grid" id="achievementGrid"></div>
+            </div>
+        </div>
+        <div id="waveDisplay" class="wave-panel" style="display: none;">
+            <div id="waveNumber"></div>
+            <div id="waveProgress"></div>
+        </div>
+        <div id="bossWarning" class="boss-warning" style="display: none;">
+            ⚠️ BOSS WARNING ⚠️
+        </div>
+        <div id="lastEnemyBanner" class="last-enemy-banner" style="display: none;">
+            LAST ENEMY!
+        </div>
+        <div id="rewardModal">
+            <div class="reward-content">
+                <h2>🎉 STAGE CLEAR! 🎉</h2>
+                <div class="reward-subtitle">報酬を1つ選択してください</div>
+                <div class="reward-grid" id="rewardGrid"></div>
+            </div>
+        </div>
+        <div id="upgradeModal" onclick="event.target.id === 'upgradeModal' && coinSystem.closeUpgradeModal()">
+            <div class="upgrade-content" onclick="event.stopPropagation()">
+                <div class="upgrade-header">
+                    <h2>💰 アップグレードショップ</h2>
+                    <div class="upgrade-header-actions">
+                        <div class="coin-display">💰 <span id="coinDisplay">0</span></div>
+                        <button class="close-upgrade-btn" onclick="coinSystem.closeUpgradeModal()">閉じる</button>
+                    </div>
+                </div>
+                <div class="upgrades-grid" id="upgradesGrid"></div>
+            </div>
+        </div>
+        <div id="simpleAchievementsModal" onclick="event.target.id === 'simpleAchievementsModal' && closeSimpleAchievementsModal()">
+            <div class="simple-achievements-content" onclick="event.stopPropagation()">
+                <div class="simple-achievements-header">
+                    <h2>📊 ゲーム記録</h2>
+                    <button class="close-btn" onclick="closeSimpleAchievementsModal()">閉じる</button>
+                </div>
+                <div class="stats-summary">
+                    <div class="stat-item">
+                        <div class="stat-label">累計撃破数</div>
+                        <div class="stat-value" id="totalKillsDisplay">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">アチーブメント</div>
+                        <div class="stat-value" id="achievementProgress">0/0 (0%)</div>
+                    </div>
+                </div>
+                <div class="records-section">
+                    <h3>📈 難易度別記録</h3>
+                    <div class="difficulty-records">
+                        <div class="difficulty-record">
+                            <div class="diff-name diff-easy">🟢 イージー</div>
+                            <div class="diff-stats">
+                                <div>最高Wave: <span id="clearEasy">0</span></div>
+                                <div>ハイスコア: <span id="scoreEasy">0</span></div>
+                            </div>
+                        </div>
+                        <div class="difficulty-record">
+                            <div class="diff-name diff-normal">🔵 ノーマル</div>
+                            <div class="diff-stats">
+                                <div>最高Wave: <span id="clearNormal">0</span></div>
+                                <div>ハイスコア: <span id="scoreNormal">0</span></div>
+                            </div>
+                        </div>
+                        <div class="difficulty-record">
+                            <div class="diff-name diff-hard">🔴 ハード</div>
+                            <div class="diff-stats">
+                                <div>最高Wave: <span id="clearHard">0</span></div>
+                                <div>ハイスコア: <span id="scoreHard">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="achievements-section">
+                    <h3>🏆 撃破数マイルストーン</h3>
+                    <div class="achievement-list" id="killMilestonesList"></div>
+                </div>
+                <div class="achievements-section">
+                    <h3>🎯 クリアアチーブメント</h3>
+                    <div class="achievement-list" id="clearAchievementsList"></div>
+                </div>
+                <div class="achievements-section">
+                    <h3>💎 スコアアチーブメント</h3>
+                    <div class="achievement-list" id="scoreAchievementsList"></div>
+                </div>
+            </div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+    </div>
+
+    <audio id="bgmAudio" loop preload="auto" src="assets/audio/menu-bgm.mp3"></audio>
+    <audio id="hoverAudio" preload="auto" src="assets/audio/ui-hover.mp3"></audio>
+    <audio id="clickAudio" preload="auto" src="assets/audio/ui-click.mp3"></audio>
+    <audio id="transitionAudio" preload="auto" src="assets/audio/ui-transition.mp3"></audio>
+    <audio id="ambientAudio" loop preload="auto" src="assets/audio/space-ambience.mp3"></audio>
+    <audio id="playerHitAudio" preload="auto" src="Assets/Audio/被弾 SE.mp3"></audio>
+    <audio id="enemyExplosionAudio" preload="auto" src="Assets/Audio/敵爆発 SE.wav"></audio>
+    <audio id="shootAudio" preload="auto" src="Assets/Audio/射撃音.wav"></audio>
+
+    <script src="unified-achievements.js"></script>
+    <script src="wave-system.js"></script>
+    <script src="difficulty-system.js"></script>
+    <script src="stage-rewards.js"></script>
+    <script src="coin-system.js"></script>
+    <script src="game-stats.js"></script>
+    <script src="game.js"></script>
+    <script src="start-screen.js"></script>
+</body>
+</html>
