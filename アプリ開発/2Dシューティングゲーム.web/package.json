@@ -1,0 +1,7 @@
+{
+  "name": "2d-shooting-game",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "serve ."
+  }
+}
